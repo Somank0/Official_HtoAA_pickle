@@ -1,4 +1,4 @@
-This is the Picklemaker used for making pickles for DRN validation on official HtoAA samples.
+This is the Picklemaker used for making pickles for DRN validation on official HtoAA samples (derived from Chirayu's AtoGG picklemaker).
 To create the pickles, change the filename/path and the folder path in "preparePickles_Off_HtoAA"
 To make any changes in the inputs (or include or exclude some high level features), change the Extract_Off_HtoAA.py file.
 Once the changes are made, run the picklemaker as follows
