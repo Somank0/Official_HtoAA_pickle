@@ -1,7 +1,7 @@
 import uproot
 import math
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import awkward as ak
 from time import time
 import pickle
@@ -73,7 +73,7 @@ iY_Min = 1
 iY_Max = 100
 
 ECAL_Min = 0
-ECAL_Max = 50
+ECAL_Max = 100
 
 ES_Min =0
 #ES_Max = 100
@@ -207,7 +207,7 @@ def cartfeat(x, y, z, E, det=None):
     #E = rescale(E, ECAL_Min, ECAL_Max)
     #x = rescale(x, X_Min, X_Max)
     #y = rescale(y, Y_Min, Y_Max)
-    #z = rescale(z, Z_Min, Z_Max)
+    #z = rescale(z, EE_Z_Min, EE_Z_Max)
 
 
     if det is None :
@@ -244,6 +244,9 @@ def npify(feat):
     print("took %f" % (time() - t0))
     return data
 
+def getA_rechit(Array,Condition):
+    Rechits=ak.where(Condition,Array,ak.Array([[]] * len(Array)))
+    return Rechits
 
 class Extract:
     def __init__(
@@ -302,8 +305,8 @@ class Extract:
             "Hit_Z_Pho2",
             "Hit_Eta_Pho2",
             "Hit_Phi_Pho2",
-            "iEtaPho2",
-            "iPhiPho2",
+            #"iEtaPho2",
+            #"iPhiPho2",
             "RecHitEnPho2",
             "RecHitFracPho2",
             "Hit_X_Pho3",
@@ -313,8 +316,8 @@ class Extract:
             "Hit_Phi_Pho3",
             "RecHitEnPho3",
             "RecHitFracPho3",
-            "iEtaPho3",
-            "iPhiPho3",
+            #"iEtaPho3",
+            #"iPhiPho3",
             "Hit_X_Pho4",
             "Hit_Y_Pho4",
             "Hit_Z_Pho4",
@@ -322,8 +325,8 @@ class Extract:
             "Hit_Phi_Pho4",
             "RecHitEnPho4",
             "RecHitFracPho4",
-            "iEtaPho4",
-            "iPhiPho4",
+            #"iEtaPho4",
+            #"iPhiPho4",
             "A_flags",
             "energy",
             "phi",
@@ -371,8 +374,7 @@ class Extract:
         # arrs = arrs[[len(j) > 0 for j in arrs["Hit_X_Pho2"]]]
         result = {}
         t0 = time()
-        print("\tDumping target took %f seconds" % (time() - t0))
-        print("Building cartesian features..")
+        print("Preparing target ...")
 
         A1_mass = arrs["A_lead_Gen_mass"]
         A2_mass = arrs["A_sublead_Gen_mass"]
@@ -391,7 +393,7 @@ class Extract:
         cond_EEEB = (cond1_EE & cond2_EB)
         cond_EEEE = (cond1_EE & cond2_EE)
 
-        A1_mass_EBEB = A1_mass[ak.num(A1_mass[cond_EBEB])>0]
+        '''A1_mass_EBEB = A1_mass[ak.num(A1_mass[cond_EBEB])>0]
         A2_mass_EBEB = A2_mass[ak.num(A2_mass[cond_EBEB])>0]
 
         A1_mass_EBEE = A1_mass[ak.num(A1_mass[cond_EBEE])>0]
@@ -400,7 +402,21 @@ class Extract:
         A2_mass_EEEB = A1_mass[ak.num(A1_mass[cond_EEEB])>0]
 
         A1_mass_EEEE = A1_mass[ak.num(A1_mass[cond_EEEE])>0]
-        A2_mass_EEEE = A2_mass[ak.num(A2_mass[cond_EEEE])>0]
+        A2_mass_EEEE = A2_mass[ak.num(A2_mass[cond_EEEE])>0]'''
+        A1_mass=ak.flatten(A1_mass)
+        A2_mass=ak.flatten(A2_mass)
+
+        A1_mass_EBEB = A1_mass[cond_EBEB]
+        A2_mass_EBEB = A2_mass[cond_EBEB]
+
+        A1_mass_EBEE = A1_mass[cond_EBEE]
+        A2_mass_EBEE = A2_mass[cond_EBEE]
+        A1_mass_EEEB = A1_mass[cond_EEEB]
+        A2_mass_EEEB = A1_mass[cond_EEEB]
+
+        A1_mass_EEEE = A1_mass[cond_EEEE]
+        A2_mass_EEEE = A2_mass[cond_EEEE]
+
         gen_alfg = A1_mass*0 +0
         gen_a2flg = A2_mass*0 +1
         #print(len(A1_mass))
@@ -453,73 +469,115 @@ class Extract:
         with open("%s/EBEE/EE/a_flag.pickle" % (self.outfolder), "wb") as outpickle:
             pickle.dump(mixed_ee_a_flg, outpickle)
 
+        print("\tDumping target took %f seconds" % (time() - t0))
+        print("Building cartesian features..")
         A_flags_o=arrs["A_flags"]
         A_flags=ak.pad_none(A_flags_o, 4)
+
+        #print(len(A_flags[:,0]))
+        #print(len(arrs["Hit_X_Pho1"]))
+        #print("Here")
+        #print(len(arrs["Hit_X_Pho3"][A_flags[:,2]==1]))
+        Pho1_hitx=arrs["Hit_X_Pho1"]
+        Pho2_hitx=arrs["Hit_X_Pho2"]
+        Pho3_hitx=arrs["Hit_X_Pho3"]
+        Pho4_hitx=arrs["Hit_X_Pho4"]
+        Pho1_hity=arrs["Hit_Y_Pho1"]
+        Pho2_hity=arrs["Hit_Y_Pho2"]
+        Pho3_hity=arrs["Hit_Y_Pho3"]
+        Pho4_hity=arrs["Hit_Y_Pho4"]
+        Pho1_hitz=arrs["Hit_Z_Pho1"]
+        Pho2_hitz=arrs["Hit_Z_Pho2"]
+        Pho3_hitz=arrs["Hit_Z_Pho3"]
+        Pho4_hitz=arrs["Hit_Z_Pho4"]
+        Pho1_hitE=arrs["RecHitEnPho1"]
+        Pho2_hitE=arrs["RecHitEnPho2"]
+        Pho3_hitE=arrs["RecHitEnPho3"]
+        Pho4_hitE=arrs["RecHitEnPho4"]
+
+        Pho1_EShitx=arrs["Hit_ES_X_Pho1"]
+        Pho2_EShitx=arrs["Hit_ES_X_Pho2"]
+        Pho3_EShitx=arrs["Hit_ES_X_Pho3"]
+        Pho4_EShitx=arrs["Hit_ES_X_Pho4"]
+        Pho1_EShity=arrs["Hit_ES_Y_Pho1"]
+        Pho2_EShity=arrs["Hit_ES_Y_Pho2"]
+        Pho3_EShity=arrs["Hit_ES_Y_Pho3"]
+        Pho4_EShity=arrs["Hit_ES_Y_Pho4"]
+        Pho1_EShitz=arrs["Hit_ES_Z_Pho1"]
+        Pho2_EShitz=arrs["Hit_ES_Z_Pho2"]
+        Pho3_EShitz=arrs["Hit_ES_Z_Pho3"]
+        Pho4_EShitz=arrs["Hit_ES_Z_Pho4"]
+        Pho1_EShitE=arrs["ES_RecHitEnPho1"]
+        Pho2_EShitE=arrs["ES_RecHitEnPho2"]
+        Pho3_EShitE=arrs["ES_RecHitEnPho3"]
+        Pho4_EShitE=arrs["ES_RecHitEnPho4"]
+
+
+        #A1_hitx=ak.where(A_flags[:,0]==0,Pho1_hitx,ak.Array([[]] * len(Pho1_hitx)))
+        #print(len(A1_hitx))
+
+        A1_hitx=ak.concatenate((getA_rechit(Pho1_hitx,A_flags[:,0] ==0),getA_rechit(Pho2_hitx,A_flags[:,1] ==0),getA_rechit(Pho3_hitx,A_flags[:,2] ==0),getA_rechit(Pho4_hitx,A_flags[:,3] ==0)),axis=1)
+        A1_hity=ak.concatenate((getA_rechit(Pho1_hity,A_flags[:,0] ==0),getA_rechit(Pho2_hity,A_flags[:,1] ==0),getA_rechit(Pho3_hity,A_flags[:,2] ==0),getA_rechit(Pho4_hity,A_flags[:,3] ==0)),axis=1)
+        A1_hitz=ak.concatenate((getA_rechit(Pho1_hitz,A_flags[:,0] ==0),getA_rechit(Pho2_hitz,A_flags[:,1] ==0),getA_rechit(Pho3_hitz,A_flags[:,2] ==0),getA_rechit(Pho4_hitz,A_flags[:,3] ==0)),axis=1)
+        A1_hitE=ak.concatenate((getA_rechit(Pho1_hitE,A_flags[:,0] ==0),getA_rechit(Pho2_hitE,A_flags[:,1] ==0),getA_rechit(Pho3_hitE,A_flags[:,2] ==0),getA_rechit(Pho4_hitE,A_flags[:,3] ==0)),axis=1)
         
-        A_pho_hitx = ak.concatenate((arrs["Hit_X_Pho1"],arrs["Hit_X_Pho2"],arrs["Hit_X_Pho3"],arrs["Hit_X_Pho4"]),axis=1)
-        A_pho_hity = ak.concatenate((arrs["Hit_Y_Pho1"],arrs["Hit_Y_Pho2"],arrs["Hit_Y_Pho3"],arrs["Hit_Y_Pho4"]),axis=1)
-        A_pho_hitz = ak.concatenate((arrs["Hit_Z_Pho1"],arrs["Hit_Z_Pho2"],arrs["Hit_Z_Pho3"],arrs["Hit_Z_Pho4"]),axis=1)
-        A_pho_hitE = ak.concatenate((arrs["RecHitEnPho1"],arrs["RecHitEnPho2"],arrs["RecHitEnPho3"],arrs["RecHitEnPho4"]),axis=1)
-        A_pho_hitFrac = ak.concatenate((arrs["RecHitFracPho1"],arrs["RecHitFracPho2"],arrs["RecHitFracPho3"],arrs["RecHitFracPho4"]),axis=1)
-        A_pho_hitE = rescale(A_pho_hitE,ECAL_Min,ECAL_Max)
-       
-        ES_hitx = ak.concatenate((arrs["Hit_ES_X_Pho1"],arrs["Hit_ES_X_Pho2"],arrs["Hit_ES_X_Pho3"],arrs["Hit_ES_X_Pho4"]),axis=1)
-        ES_hity = ak.concatenate((arrs["Hit_ES_Y_Pho1"],arrs["Hit_ES_Y_Pho2"],arrs["Hit_ES_Y_Pho3"],arrs["Hit_ES_Y_Pho4"]),axis=1)
-        ES_hitz = ak.concatenate((arrs["Hit_ES_Z_Pho1"],arrs["Hit_ES_Z_Pho2"],arrs["Hit_ES_Z_Pho3"],arrs["Hit_ES_Z_Pho4"]),axis=1)
-        ES_hit_E = ak.concatenate((arrs["ES_RecHitEnPho1"],arrs["ES_RecHitEnPho2"],arrs["ES_RecHitEnPho3"],arrs["ES_RecHitEnPho4"]),axis=1)
+        A1_hitE=rescale(A1_hitE,ECAL_Min,ECAL_Max)
+        A1_hitx-rescale(A1_hitx,X_Min,X_Max)
+        A1_hity=rescale(A1_hity,Y_Min,Y_Max)
+        A1_hitz=rescale(A1_hitz,EE_Z_Min,EE_Z_Max)
+        A1_EE_flag=A1_hitx*0 +0
+        #print(len(A1_hitx[ak.num(A1_hitx)>0])-len(A1_hity[ak.num(A1_hity)>0]))
 
-        ES_hit_E = rescale(ES_hit_E,ES_Min,ES_Max)
+        A1_ES_hitx=ak.concatenate((getA_rechit(Pho1_EShitx,A_flags[:,0] ==0),getA_rechit(Pho2_EShitx,A_flags[:,1] ==0),getA_rechit(Pho3_EShitx,A_flags[:,2] ==0),getA_rechit(Pho4_EShitx,A_flags[:,3] ==0)),axis=1)
+        A1_ES_hity=ak.concatenate((getA_rechit(Pho1_EShity,A_flags[:,0] ==0),getA_rechit(Pho2_EShity,A_flags[:,1] ==0),getA_rechit(Pho3_EShity,A_flags[:,2] ==0),getA_rechit(Pho4_EShity,A_flags[:,3] ==0)),axis=1)
+        A1_ES_hitz=ak.concatenate((getA_rechit(Pho1_EShitz,A_flags[:,0] ==0),getA_rechit(Pho2_EShitz,A_flags[:,1] ==0),getA_rechit(Pho3_EShitz,A_flags[:,2] ==0),getA_rechit(Pho4_EShitz,A_flags[:,3] ==0)),axis=1)
+        A1_ES_hitE=ak.concatenate((getA_rechit(Pho1_EShitE,A_flags[:,0] ==0),getA_rechit(Pho2_EShitE,A_flags[:,1] ==0),getA_rechit(Pho3_EShitE,A_flags[:,2] ==0),getA_rechit(Pho4_EShitE,A_flags[:,3] ==0)),axis=1)
+        A1_ES_flag=A1_ES_hitx*0 +1
+        A1_ES_hitE=rescale(A1_ES_hitE,ES_Min,ES_Max)
+        A1_ES_hitx=rescale(A1_ES_hitx,X_Min,X_Max)
+        A1_ES_hity=rescale(A1_ES_hity,Y_Min,Y_Max)
+        A1_ES_hitz=rescale(A1_ES_hitz,EE_Z_Min,EE_Z_Max)
+        #print(len(A1_ES_hitx)-len(A1_ES_hity))
 
-        ES_flag = ES_hitx*0 +1
-        EE_flag = A_pho_hitx*0 +0
+        A2_hitx=ak.concatenate((getA_rechit(Pho1_hitx,A_flags[:,0] ==1),getA_rechit(Pho2_hitx,A_flags[:,1] ==1),getA_rechit(Pho3_hitx,A_flags[:,2] ==1),getA_rechit(Pho4_hitx,A_flags[:,3] ==1)),axis=1)
+        A2_hity=ak.concatenate((getA_rechit(Pho1_hity,A_flags[:,0] ==1),getA_rechit(Pho2_hity,A_flags[:,1] ==1),getA_rechit(Pho3_hity,A_flags[:,2] ==1),getA_rechit(Pho4_hity,A_flags[:,3] ==1)),axis=1)
+        A2_hitz=ak.concatenate((getA_rechit(Pho1_hitz,A_flags[:,0] ==1),getA_rechit(Pho2_hitz,A_flags[:,1] ==1),getA_rechit(Pho3_hitz,A_flags[:,2] ==1),getA_rechit(Pho4_hitz,A_flags[:,3] ==1)),axis=1)
+        A2_hitE=ak.concatenate((getA_rechit(Pho1_hitE,A_flags[:,0] ==1),getA_rechit(Pho2_hitE,A_flags[:,1] ==1),getA_rechit(Pho3_hitE,A_flags[:,2] ==1),getA_rechit(Pho4_hitE,A_flags[:,3] ==1)),axis=1)
 
-        Flag = ak.concatenate((EE_flag,ES_flag),axis=-1)
+        A2_EE_flag=A2_hitx*0+0
+        A2_hitE=rescale(A2_hitE,ECAL_Min,ECAL_Max)
+        A2_hitx=rescale(A2_hitx,X_Min,X_Max)
+        A2_hity=rescale(A2_hity,Y_Min,Y_Max)
+        A2_hitz=rescale(A2_hitz,EE_Z_Min,EE_Z_Max)
+        #print(len(A2_hitx)-len(A2_hity))
 
+        A2_ES_hitx=ak.concatenate((getA_rechit(Pho1_EShitx,A_flags[:,0] ==1),getA_rechit(Pho2_EShitx,A_flags[:,1] ==1),getA_rechit(Pho3_EShitx,A_flags[:,2] ==1),getA_rechit(Pho4_EShitx,A_flags[:,3] ==1)),axis=1)
+        A2_ES_hity=ak.concatenate((getA_rechit(Pho1_EShity,A_flags[:,0] ==1),getA_rechit(Pho2_EShity,A_flags[:,1] ==1),getA_rechit(Pho3_EShity,A_flags[:,2] ==1),getA_rechit(Pho4_EShity,A_flags[:,3] ==1)),axis=1)
+        A2_ES_hitz=ak.concatenate((getA_rechit(Pho1_EShitz,A_flags[:,0] ==1),getA_rechit(Pho2_EShitz,A_flags[:,1] ==1),getA_rechit(Pho3_EShitz,A_flags[:,2] ==1),getA_rechit(Pho4_EShitz,A_flags[:,3] ==1)),axis=1)
+        A2_ES_hitE=ak.concatenate((getA_rechit(Pho1_EShitE,A_flags[:,0] ==1),getA_rechit(Pho2_EShitE,A_flags[:,1] ==1),getA_rechit(Pho3_EShitE,A_flags[:,2] ==1),getA_rechit(Pho4_EShitE,A_flags[:,3] ==1)),axis=1)
+        A2_ES_flag=A2_ES_hitx*0+1
+        A2_ES_hitE=rescale(A2_ES_hitE,ES_Min,ES_Max)
+        A2_ES_hitx=rescale(A2_ES_hitx,X_Min,X_Max)
+        A2_ES_hity=rescale(A2_ES_hity,Y_Min,Y_Max)
+        A2_ES_hitz=rescale(A2_ES_hitz,EE_Z_Min,EE_Z_Max)
+        #print(len(A2_ES_hitx)-len(A2_ES_hity))
 
-        Hitx = ak.concatenate((A_pho_hitx,ES_hitx),axis=-1)
-        Hity = ak.concatenate((A_pho_hity,ES_hity),axis=-1)
-        Hitz = ak.concatenate((A_pho_hitz,ES_hitz),axis=-1)
-        HitE = ak.concatenate((A_pho_hitE,ES_hit_E),axis=-1)
-        Hitx = rescale(Hitx, X_Min,X_Max)
-        Hity = rescale(Hity,Y_Min,Y_Max)
-        Hitz = rescale(Hitz,EE_Z_Min,EE_Z_Max)
+        A1_hitx=ak.concatenate((A1_hitx,A1_ES_hitx),axis=-1)
+        A1_hity=ak.concatenate((A1_hity,A1_ES_hity),axis=-1)
+        A1_hitz=ak.concatenate((A1_hitz,A1_ES_hitz),axis=-1)
+        A1_hitE=ak.concatenate((A1_hitE,A1_ES_hitE),axis=-1)
+        A1_hitflag=ak.concatenate((A1_EE_flag,A1_ES_flag),axis=-1)
+        #print(len(A1_hitx[ak.num(A1_hitx)>0]) -len(A1_hity[ak.num(A1_hitx)>0]))
+        #A1_hitx=rescale(A1_hitx,X_Min,X_Max)
 
-        A_flagPho1 = (ak.concatenate((arrs["Hit_X_Pho1"],arrs["Hit_ES_X_Pho1"]),axis=-1))*0 + A_flags[:,0][A_flags[:,0]>-1]
-        A_flagPho2 = (ak.concatenate((arrs["Hit_X_Pho2"],arrs["Hit_ES_X_Pho2"]),axis=-1))*0 + A_flags[:,1][A_flags[:,1]>-1]
-        A_flagPho3 = (ak.concatenate((arrs["Hit_X_Pho3"],arrs["Hit_ES_X_Pho3"]),axis=-1))*0 + A_flags[:,2][A_flags[:,2]>-1]
-        A_flagPho4 = (ak.concatenate((arrs["Hit_X_Pho4"],arrs["Hit_ES_X_Pho4"]),axis=-1))*0 + A_flags[:,3][A_flags[:,3]>-1]
-        A_Flag = ak.concatenate((A_flagPho1,A_flagPho2,A_flagPho3,A_flagPho4),axis=1)
-        
+        A2_hitx=ak.concatenate((A2_hitx,A2_ES_hitx),axis=-1)
+        A2_hity=ak.concatenate((A2_hity,A2_ES_hity),axis=-1)
+        A2_hitz=ak.concatenate((A2_hitz,A2_ES_hitz),axis=-1)
+        A2_hitE=ak.concatenate((A2_hitE,A2_ES_hitE),axis=-1)
+        A2_hitflag=ak.concatenate((A2_EE_flag,A2_ES_flag),axis=-1)
+        #print(len(A2_hitx[ak.num(A2_hitx)>0])-len(A2_hity[ak.num(A2_hitx)>0]))
 
-        Pho1_flag = (ak.concatenate((arrs["Hit_X_Pho1"],arrs["Hit_ES_X_Pho1"]),axis=-1))*0 +0
-        Pho2_flag = (ak.concatenate((arrs["Hit_X_Pho2"],arrs["Hit_ES_X_Pho2"]),axis=-1))*0 +1
-        Pho3_flag = (ak.concatenate((arrs["Hit_X_Pho3"],arrs["Hit_ES_X_Pho3"]),axis=-1))*0 +2
-        Pho4_flag = (ak.concatenate((arrs["Hit_X_Pho4"],arrs["Hit_ES_X_Pho4"]),axis=-1))*0 +3
-        Pho_flag = ak.concatenate((Pho1_flag,Pho2_flag,Pho3_flag,Pho4_flag),axis=1)
-
-
-        eta_o = arrs["eta"]
-        eta = ak.pad_none(eta_o,4)
-        eta_flags_pho1 = (ak.concatenate((arrs["Hit_X_Pho1"],arrs["Hit_ES_X_Pho1"]),axis=-1))*0 + eta[:,0][eta[:,0]>-999]
-        eta_flags_pho2 = (ak.concatenate((arrs["Hit_X_Pho2"],arrs["Hit_ES_X_Pho2"]),axis=-1))*0 + eta[:,1][eta[:,1]>-999]
-        eta_flags_pho3 = (ak.concatenate((arrs["Hit_X_Pho3"],arrs["Hit_ES_X_Pho3"]),axis=-1))*0 + eta[:,2][eta[:,2]>-999]
-        eta_flags_pho4 = (ak.concatenate((arrs["Hit_X_Pho4"],arrs["Hit_ES_X_Pho4"]),axis=-1))*0 + eta[:,3][eta[:,3]>-999]
-        eta_flags = ak.concatenate((eta_flags_pho1,eta_flags_pho2,eta_flags_pho3,eta_flags_pho4),axis=1)
-
-        isEE = (abs(eta_flags)>=1.44) & (abs(eta_flags) <= 2.5)
-        isEB = abs(eta_flags)<=1.4
-        isA1 = A_Flag ==0
-        isA2 = A_Flag ==1
-        
-        A1_hitx=Hitx[isA1]
-        A1_hity=Hity[isA1]
-        A1_hitz=Hitz[isA1]
-        A1_hitE = HitE[isA1]
-        A1_flag = Flag[isA1]
-        A2_hitx=Hitx[isA2]
-        A2_hity=Hity[isA2]
-        A2_hitz=Hitz[isA2]
-        A2_hitE = HitE[isA2]
+        '''Hitx = ak.concatenate((A_pho_hitx,ES_hitx),axis=-1)
         A2_flag = Flag[isA2]
 
         sig_IEIE = arrs["Pho_SigIEIE"]
@@ -644,58 +702,63 @@ class Extract:
         mixed_ee_graphx =[]
         mixed_ee_graphx.append(gx)
         mixed_ee_graphx.append(gx2)
-        mixed_ee_graphx = np.concatenate(mixed_ee_graphx,1)
+        mixed_ee_graphx = np.concatenate(mixed_ee_graphx,1)'''
         print("\tBuilding high level features took %f seconds" % (time() - t0))
 
         EBEB_hitx = ak.concatenate((A1_hitx[cond_EBEB],A2_hitx[cond_EBEB]),axis=0)
         EBEB_hity = ak.concatenate((A1_hity[cond_EBEB],A2_hity[cond_EBEB]),axis=0)
         EBEB_hitz = ak.concatenate((A1_hitz[cond_EBEB],A2_hitz[cond_EBEB]),axis=0)
         EBEB_hitE = ak.concatenate((A1_hitE[cond_EBEB],A2_hitE[cond_EBEB]),axis=0)
-        EBEB_flags = ak.concatenate((A1_flag[cond_EBEB],A2_flag[cond_EBEB]),axis=0)
-        EBEB_a_flag = ak.concatenate(((A_Flag[isA1])[cond_EBEB],(A_Flag[isA2])[cond_EBEB]),axis=0)
-
+        #EBEB_flags = ak.concatenate((A1_flag[cond_EBEB],A2_flag[cond_EBEB]),axis=0)
+        #EBEB_a_flag = ak.concatenate(((A_Flag[isA1])[cond_EBEB],(A_Flag[isA2])[cond_EBEB]),axis=0)
+        #print(len(EBEB_hitx[ak.num(EBEB_hitx)>0])-len(EBEB_hity[ak.num(EBEB_hitx)>0]))
+        #print(len(EBEB_hity[ak.num(EBEB_hitx)>0]))
         mixed_EB_hitx = ak.concatenate((A1_hitx[cond_EBEE],A2_hitx[cond_EEEB]),axis=0)
         mixed_EB_hity = ak.concatenate((A1_hity[cond_EBEE],A2_hity[cond_EEEB]),axis=0)
         mixed_EB_hitz = ak.concatenate((A1_hitz[cond_EBEE],A2_hitz[cond_EEEB]),axis=0)
         mixed_EB_hitE = ak.concatenate((A1_hitE[cond_EBEE],A2_hitE[cond_EEEB]),axis=0)
-        mixed_EB_flags = ak.concatenate((A1_flag[cond_EBEE],A2_flag[cond_EEEB]),axis=0)
+        #mixed_EB_flags = ak.concatenate((A1_flag[cond_EBEE],A2_flag[cond_EEEB]),axis=0)
 
         mixed_EE_hitx = ak.concatenate((A1_hitx[cond_EEEB],A2_hitx[cond_EBEE]),axis=0)
         mixed_EE_hity = ak.concatenate((A1_hity[cond_EEEB],A2_hity[cond_EBEE]),axis=0)
         mixed_EE_hitz = ak.concatenate((A1_hitz[cond_EEEB],A2_hitz[cond_EBEE]),axis=0)
         mixed_EE_hitE = ak.concatenate((A1_hitE[cond_EEEB],A2_hitE[cond_EBEE]),axis=0)
-        mixed_EE_flags = ak.concatenate((A1_flag[cond_EEEB],A2_flag[cond_EBEE]),axis=0)
+        #mixed_EE_flags = ak.concatenate((A1_flag[cond_EEEB],A2_flag[cond_EBEE]),axis=0)
+        mixed_EE_flags=ak.concatenate((A1_hitflag[cond_EEEB],A2_hitflag[cond_EBEE]),axis=0)
 
 
         EEEE_hitx = ak.concatenate((A1_hitx[cond_EEEE],A2_hitx[cond_EEEE]),axis=0)
         EEEE_hity = ak.concatenate((A1_hity[cond_EEEE],A2_hity[cond_EEEE]),axis=0)
         EEEE_hitz = ak.concatenate((A1_hitz[cond_EEEE],A2_hitz[cond_EEEE]),axis=0)
         EEEE_hitE = ak.concatenate((A1_hitE[cond_EEEE],A2_hitE[cond_EEEE]),axis=0)
-        EEEE_flags = ak.concatenate((A1_flag[cond_EEEE],A2_flag[cond_EEEE]),axis=0)
-
+        #EEEE_flags = ak.concatenate((A1_flag[cond_EEEE],A2_flag[cond_EEEE]),axis=0)
+        EEEE_flags = ak.concatenate((A1_hitflag[cond_EEEE],A2_hitflag[cond_EEEE]),axis=0)
         #print(EBEB_hitx)
-
-
-        EBEB_cf = cartfeat(EBEB_hitx,EBEB_hity,EBEB_hitz,EBEB_hitE)
+       # print(len(EBEB_hitx[ak.num(EBEB_hitx) >0]))
+       # print(len(EBEB_hity[ak.num(EBEB_hitx) >0]))
+        #print(len(EBEB_hitz[ak.num(EBEB_hitx >0)]))
+        EBEB_cf = cartfeat(EBEB_hitx[ak.num(EBEB_hitx) >0],EBEB_hity[ak.num(EBEB_hitx) >0],EBEB_hitz[ak.num(EBEB_hitx) >0],EBEB_hitE[ak.num(EBEB_hitx) >0])
         #EBEB_cf = cartfeat(EBEB_hitx,EBEB_hity,EBEB_hitz,EBEB_hitE,EBEB_flags)
-        EEEE_cf = cartfeat(EEEE_hitx,EEEE_hity,EEEE_hitz,EEEE_hitE,EEEE_flags)
-        mixed_EB_cf = cartfeat(mixed_EB_hitx,mixed_EB_hity,mixed_EB_hitz,mixed_EB_hitE)
+        EEEE_cf = cartfeat(EEEE_hitx[ak.num(EEEE_hitx)>0],EEEE_hity[ak.num(EEEE_hitx)>0],EEEE_hitz[ak.num(EEEE_hitx)>0],EEEE_hitE[ak.num(EEEE_hitx)>0],EEEE_flags[ak.num(EEEE_hitx)>0])
+        mixed_EB_cf = cartfeat(mixed_EB_hitx[ak.num(mixed_EB_hitx)>0],mixed_EB_hity[ak.num(mixed_EB_hitx)>0],mixed_EB_hitz[ak.num(mixed_EB_hitx)>0],mixed_EB_hitE[ak.num(mixed_EB_hitx)>0])
         #mixed_EB_cf = cartfeat(mixed_EB_hitx,mixed_EB_hity,mixed_EB_hitz,mixed_EB_hitE,mixed_EB_flags)
-        mixed_EE_cf = cartfeat(mixed_EE_hitx,mixed_EE_hity,mixed_EE_hitz,mixed_EE_hitE,mixed_EE_flags)
+        mixed_EE_cf = cartfeat(mixed_EE_hitx[ak.num(mixed_EE_hitx)>0],mixed_EE_hity[ak.num(mixed_EE_hitx)>0],mixed_EE_hitz[ak.num(mixed_EE_hitx)>0],mixed_EE_hitE[ak.num(mixed_EE_hitx)>0],mixed_EE_flags[ak.num(mixed_EE_hitx)>0])
         print("\tBuilding features took %f seconds" % (time() - t0))
         t0 = time()
 
-        print(len(target_EBEB))
-        print(len(EBEB_hitx))
+        #print(len(target_EBEB))
+        #print(len(EBEB_hitx))
 
 
 
         result["EBEB_cf"] = torchify(EBEB_cf)
         #result["EBEB_cf"] = torchify(EBEB_cf,EBEB_graphx)
-        result["EEEE_cf"] = torchify(EEEE_cf,EEEE_graphx)
+        #result["EEEE_cf"] = torchify(EEEE_cf,EEEE_graphx)
+        result["EEEE_cf"] = torchify(EEEE_cf)
         result["mixed_EB_cf"] = torchify(mixed_EB_cf)
         #result["mixed_EB_cf"] = torchify(mixed_EB_cf,mixed_eb_graphx)
-        result["mixed_EE_cf"] = torchify(mixed_EE_cf,mixed_ee_graphx)
+        #result["mixed_EE_cf"] = torchify(mixed_EE_cf,mixed_ee_graphx)
+        result["mixed_EE_cf"] = torchify(mixed_EE_cf)
         print("\tTorchifying took %f seconds" % (time() - t0))
         t0 = time()
 
@@ -703,9 +766,9 @@ class Extract:
             torch.save(result["EBEB_cf"], f, pickle_protocol=4)
         with open("%s/EEEE/cartfeat_ES.pickle" % (self.outfolder), "wb") as f:
             torch.save(result["EEEE_cf"], f, pickle_protocol=4)
-        with open("%s/EBEE/cartfeat.pickle" % (self.outfolder), "wb") as f:
+        with open("%s/EBEE/EB/cartfeat.pickle" % (self.outfolder), "wb") as f:
             torch.save(result["mixed_EB_cf"], f, pickle_protocol=4)
-        with open("%s/EBEE/cartfeat_ES.pickle" % (self.outfolder), "wb") as f:
+        with open("%s/EBEE/EE/cartfeat_ES.pickle" % (self.outfolder), "wb") as f:
             torch.save(result["mixed_EE_cf"], f, pickle_protocol=4)
         print("\tDumping took %f seconds" % (time() - t0))
         return result      
