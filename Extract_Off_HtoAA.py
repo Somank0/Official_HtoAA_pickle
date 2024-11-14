@@ -393,16 +393,8 @@ class Extract:
         cond_EEEB = (cond1_EE & cond2_EB)
         cond_EEEE = (cond1_EE & cond2_EE)
 
-        '''A1_mass_EBEB = A1_mass[ak.num(A1_mass[cond_EBEB])>0]
-        A2_mass_EBEB = A2_mass[ak.num(A2_mass[cond_EBEB])>0]
-
-        A1_mass_EBEE = A1_mass[ak.num(A1_mass[cond_EBEE])>0]
-        A2_mass_EBEE = A2_mass[ak.num(A2_mass[cond_EBEE])>0]
-        A1_mass_EEEB = A1_mass[ak.num(A1_mass[cond_EEEB])>0]
-        A2_mass_EEEB = A1_mass[ak.num(A1_mass[cond_EEEB])>0]
-
-        A1_mass_EEEE = A1_mass[ak.num(A1_mass[cond_EEEE])>0]
-        A2_mass_EEEE = A2_mass[ak.num(A2_mass[cond_EEEE])>0]'''
+        
+        
         A1_mass=ak.flatten(A1_mass)
         A2_mass=ak.flatten(A2_mass)
 
@@ -577,132 +569,7 @@ class Extract:
         A2_hitflag=ak.concatenate((A2_EE_flag,A2_ES_flag),axis=-1)
         #print(len(A2_hitx[ak.num(A2_hitx)>0])-len(A2_hity[ak.num(A2_hitx)>0]))
 
-        '''Hitx = ak.concatenate((A_pho_hitx,ES_hitx),axis=-1)
-        A2_flag = Flag[isA2]
-
-        sig_IEIE = arrs["Pho_SigIEIE"]
-        rho_o = arrs["rho"]
-        A1_sc_eta = eta_o[A_flags_o==0]
-        A1_pho_sigIEIE = sig_IEIE[A_flags_o==0]
-        #print(A1_sc_eta)
-        A2_sc_eta = eta_o[A_flags_o==1]
-        A2_pho_sigIEIE = sig_IEIE[A_flags_o==1]
-
-        t0=time()
-        
-        EBEB_sc_eta = ak.concatenate((A1_sc_eta[cond_EBEB],A2_sc_eta[cond_EBEB]),axis=0)
-        EBEB_sc_eta = ak.drop_none(EBEB_sc_eta)
-        EBEB_sc_eta = EBEB_sc_eta[ak.num(EBEB_sc_eta)>0]
-        sc_eta1 =[]
-        sc_eta2=[]
-        for index,value in enumerate(EBEB_sc_eta):
-            sc_eta1.append(EBEB_sc_eta[index][0])
-            if len(value)==1:
-                sc_eta2.append(0)
-            if len(value)>=2:
-                sc_eta2.append(EBEB_sc_eta[index][1])
-        gx = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sc_eta1]
-        gx2 = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sc_eta2]
-        with open("%s/EBEB/sc_eta1.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx, outpickle)
-        with open("%s/EBEB/sc_eta2.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx2, outpickle)
-
-        EBEB_graphx =[]
-        EBEB_graphx.append(gx)
-        EBEB_graphx.append(gx2)
-        EBEB_graphx = np.concatenate(EBEB_graphx,1)
-
-        EEEE_sc_eta = ak.concatenate((A1_sc_eta[cond_EEEE],A2_sc_eta[cond_EEEE]),axis=0)
-        EEEE_sc_eta = ak.drop_none(EEEE_sc_eta)
-        EEEE_sc_eta = EEEE_sc_eta[ak.num(EEEE_sc_eta)>0]
-        EEEE_sigIEIE = ak.concatenate((A1_pho_sigIEIE[cond_EEEE],A2_pho_sigIEIE[cond_EEEE]),axis=0)
-        EEEE_sigIEIE= ak.drop_none(EEEE_sigIEIE)
-        EEEE_sigIEIE = EEEE_sigIEIE[ak.num(EEEE_sigIEIE)>0]
-        EEEE_rho = rho_o[cond_EEEE]
-        sc_eta1 =[]
-        sc_eta2=[]
-        sigIEIE1=[]
-        sigIEIE2=[]
-        for index,value in enumerate(EEEE_sc_eta):
-            sc_eta1.append(EEEE_sc_eta[index][0])
-            if len(value)==1:
-                sc_eta2.append(0)
-                sigIEIE2.append(0)
-                sigIEIE1.append(EEEE_sigIEIE[index][0])
-            if len(value)>=2:
-                sc_eta2.append(EEEE_sc_eta[index][1])
-                sigIEIE2.append(EEEE_sigIEIE[index][1])
-        gx = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sc_eta1]
-        gx2 = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sc_eta2]
-        gx3 = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sigIEIE1]
-        gx4 = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sigIEIE2]
-        gx5 = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in EEEE_rho]
-        with open("%s/EEEE/sc_eta1.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx, outpickle)
-        with open("%s/EEEE/sc_eta2.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx2, outpickle)
-        with open("%s/EEEE/sigIEiE1.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx3, outpickle)
-        with open("%s/EEEE/sigIEIE2.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx4, outpickle)
-        with open("%s/EEEE/Rho.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx5, outpickle)
-
-
-
-        EEEE_graphx =[]
-        EEEE_graphx.append(gx)
-        EEEE_graphx.append(gx2)
-        EEEE_graphx.append(gx3)
-        EEEE_graphx.append(gx4)
-        EEEE_graphx.append(gx5)
-        EEEE_graphx = np.concatenate(EEEE_graphx,1)
-
-
-        mixed_eb_sc_eta = ak.concatenate((A1_sc_eta[cond_EBEE],A2_sc_eta[cond_EEEB]),axis=0)
-        mixed_eb_sc_eta = ak.drop_none(mixed_eb_sc_eta)
-        mixed_eb_sc_eta = mixed_eb_sc_eta[ak.num(mixed_eb_sc_eta)>0]
-        sc_eta1 =[]
-        sc_eta2=[]
-        for index,value in enumerate(mixed_eb_sc_eta):
-            sc_eta1.append(value[0])
-            if len(value)==1:
-                sc_eta2.append(0)
-            if len(value)>=2:
-                sc_eta2.append(value[1])
-        gx = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sc_eta1]
-        gx2 = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sc_eta2]
-        with open("%s/EBEE/EB/sc_eta1.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx, outpickle)
-        with open("%s/EBEE/EB/sc_eta2.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx2, outpickle)
-        mixed_eb_graphx =[]
-        mixed_eb_graphx.append(gx)
-        mixed_eb_graphx.append(gx2)
-        mixed_eb_graphx = np.concatenate(mixed_eb_graphx,1)
-
-        mixed_ee_sc_eta = ak.concatenate((A1_sc_eta[cond_EEEB],A2_sc_eta[cond_EBEE]),axis=0)
-        mixed_ee_sc_eta = ak.drop_none(mixed_ee_sc_eta)
-        mixed_ee_sc_eta = mixed_ee_sc_eta[ak.num(mixed_ee_sc_eta)>0]
-        sc_eta1 =[]
-        sc_eta2=[]
-        for index,value in enumerate(mixed_ee_sc_eta):
-            sc_eta1.append(value[0])
-            if len(value)==1:
-                sc_eta2.append(0)
-            if len(value)>=2:
-                sc_eta2.append(value[1])
-        gx = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sc_eta1]
-        gx2 = [torch.from_numpy(np.asarray(ak.to_numpy(x)).astype(np.float32)) for x in sc_eta2]
-        with open("%s/EBEE/EE/sc_eta1.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx, outpickle)
-        with open("%s/EBEE/EE/sc_eta2.pickle" % (self.outfolder), "wb") as outpickle:
-            pickle.dump(gx2, outpickle)
-        mixed_ee_graphx =[]
-        mixed_ee_graphx.append(gx)
-        mixed_ee_graphx.append(gx2)
-        mixed_ee_graphx = np.concatenate(mixed_ee_graphx,1)'''
+       
         print("\tBuilding high level features took %f seconds" % (time() - t0))
 
         EBEB_hitx = ak.concatenate((A1_hitx[cond_EBEB],A2_hitx[cond_EBEB]),axis=0)
